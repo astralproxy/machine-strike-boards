@@ -25,15 +25,31 @@
 
         .top-bar {
             background-color: black;
-            padding: 15px 40px;
+            padding: 10px 15px; /* Reduced padding */
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border-color);
-            letter-spacing: 2px;
+            flex-wrap: nowrap; /* Prevent wrapping */
         }
 
-        .title-zone { font-weight: bold; font-size: 1.2rem; white-space: nowrap; }
+        .title-zone { 
+            font-weight: bold; 
+            font-size: 0.85rem; /* Smaller font for mobile */
+            white-space: nowrap; 
+        }
+
+        #zone-dropdown {
+            background: black;
+            color: var(--text-dim);
+            max-width: 110px; /* Constrain width */
+            border: 1px solid #444;
+            padding: 4px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
         .zone-name { color: var(--text-dim); margin-left: 10px; }
 
         .main-container {
@@ -57,8 +73,8 @@
         .board-header h2 { margin: 0; font-size: 2.2rem; letter-spacing: 4px; }
 
         .board-image-container img {
-            width: 100%;
-            max-width: 400px; 
+            width: 400px;
+            height: auto;
             border: 1px solid #444;
             box-shadow: 0 10px 30px rgba(0,0,0,0.7);
             display: block;
@@ -106,12 +122,33 @@
             align-items: center; z-index: 100; transition: opacity 0.5s;
         }
 
+        /* Base style: No arrow, no pointer cursor (Desktop) */
+        .legend-toggle {
+            display: block;
+            cursor: default;
+        }
+
+        #legend-arrow {
+            display: none; /* Hidden on desktop */
+        }
+
         /* Mobile Responsive Adjustments */
         @media (max-width: 1100px) {
             .main-container {
                 grid-template-columns: 1fr; /* Stack panels vertically */
                 padding: 20px;
                 gap: 40px;
+            }
+
+            #legend-wrapper { display: none; } /* Hide by default on mobile */
+            .legend-toggle { cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+            .legend-open #legend-wrapper { display: block; }
+
+            #legend-arrow {
+                display: inline-block;
+                color: var(--accent-gold);
+                font-size: 0.8rem;
+                transition: transform 0.3s;
             }
 
             .details-panel {
@@ -122,15 +159,18 @@
             }
 
             .board-image-container img {
-                max-width: 100%; /* Ensure board shrinks to fit screen */
+                width: 100%; /* Ensure board shrinks to fit screen */
+                max-width: 400px;
                 height: auto;
             }
 
             .top-bar {
-                padding: 15px 20px;
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
+                padding: 10px 15px;      /* Match desktop padding */
+                flex-direction: row;     /* CHANGE THIS from column to row */
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+                text-align: left;        /* CHANGE THIS from center to left */
             }
 
             #editor-grid {
@@ -140,6 +180,7 @@
                 margin-bottom: -60px; /* Offset the scale pull */
             }
         }
+        .collapsed-content { display: none; }
     </style>
 </head>
 <body>
@@ -148,7 +189,7 @@
 
     <div class="top-bar">
         <div class="title-zone">
-            MACHINE STRIKE | 
+            BOARD | 
             <select id="zone-dropdown" style="background: black; color: var(--text-dim); max-width: 150px; border: 1px solid #444; padding: 5px; text-transform: uppercase; font-family: inherit; cursor: pointer;">
                 <option>LOADING ZONES...</option>
             </select>
@@ -157,44 +198,49 @@
     </div>
 
     <div class="main-container">
-        <div class="challenges-panel">
+        <div class="challenges-panel" id="legend-container">
             <!-- SECTION: Legend of board pieces -->
-            <h2>LEGEND</h2>
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem; color: var(--text-dim);">
-                <thead>
-                    <tr style="border-bottom: 1px solid var(--border-color);">
-                        <th style="padding: 8px 4px; width: 50px">IMAGE</th>
-                        <th style="padding: 8px 4px; width: 100px">NAME</th>
-                        <th>COUNT</th>
-                    </tr>
-                </thead>
-                <tbody id="legend-body">
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td style="padding: 4px 4px;"><img src="images/Chasm.jpg" style="width: 50px; display: block;" alt=""></td>
-                        <td style="padding: 4px 4px;">Chasm</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td style="padding: 4px 4px;"><img src="images/Marsh.jpg" style="width: 50px; display: block;" alt=""></td>
-                        <td style="padding: 4px 4px;">Marsh</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td style="padding: 4px 4px;"><img src="images/Grassland.jpg" style="width: 50px; display: block;" alt=""></td>
-                        <td style="padding: 4px 4px;">Grassland</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td style="padding: 4px 4px;"><img src="images/Forest.jpg" style="width: 50px; display: block;" alt=""></td>
-                        <td style="padding: 4px 4px;">Forest</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td style="padding: 4px 4px;"><img src="images/Hill.jpg" style="width: 50px; display: block;" alt=""></td>
-                        <td style="padding: 4px 4px;">Hill</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td style="padding: 4px 4px;"><img src="images/Mountain.jpg" style="width: 50px; display: block;" alt=""></td>
-                        <td style="padding: 4px 4px;">Mountain</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="legend-toggle" onclick="toggleLegend()">
+                <h2>LEGEND</h2>
+                <span id="legend-arrow">▼</span>
+            </div>
+            <div id="legend-wrapper">
+                <table class="legend-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem; color: var(--text-dim);">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <th style="padding: 8px 4px; width: 50px">IMAGE</th>
+                            <th style="padding: 8px 4px; width: 100px">NAME</th>
+                            <th>COUNT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="legend-body">
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 4px 4px;"><img src="images/Chasm.jpg" style="width: 50px; display: block;" alt=""></td>
+                            <td style="padding: 4px 4px;">Chasm</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 4px 4px;"><img src="images/Marsh.jpg" style="width: 50px; display: block;" alt=""></td>
+                            <td style="padding: 4px 4px;">Marsh</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 4px 4px;"><img src="images/Grassland.jpg" style="width: 50px; display: block;" alt=""></td>
+                            <td style="padding: 4px 4px;">Grassland</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 4px 4px;"><img src="images/Forest.jpg" style="width: 50px; display: block;" alt=""></td>
+                            <td style="padding: 4px 4px;">Forest</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 4px 4px;"><img src="images/Hill.jpg" style="width: 50px; display: block;" alt=""></td>
+                            <td style="padding: 4px 4px;">Hill</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 4px 4px;"><img src="images/Mountain.jpg" style="width: 50px; display: block;" alt=""></td>
+                            <td style="padding: 4px 4px;">Mountain</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <div id="challenge-list" style="display:none"></div>
         </div>
 
@@ -700,6 +746,22 @@
             };
 
             reader.readAsText(file);
+        }
+
+        function toggleLegend() {
+            const arrow = document.getElementById('legend-arrow');
+            // Only run if the arrow is visible (mobile mode)
+            if (window.getComputedStyle(arrow).display !== 'none') {
+                const wrapper = document.getElementById('legend-wrapper');
+                
+                if (wrapper.style.display === "none" || wrapper.style.display === "") {
+                    wrapper.style.display = "block";
+                    arrow.innerText = "▲";
+                } else {
+                    wrapper.style.display = "none";
+                    arrow.innerText = "▼";
+                }
+            }
         }
 
         init();
