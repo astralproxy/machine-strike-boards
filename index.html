@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine Strike | Tracking</title>
+    <style>
+        :root {
+            --bg-dark: #120e0a;
+            --panel-bg: rgba(45, 38, 32, 0.5);
+            --accent-gold: #c9b38c;
+            --text-main: #e0ddd5;
+            --text-dim: #9b9589;
+            --border-color: #333;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-transform: uppercase;
+            background-image: url('https://www.transparenttextures.com/patterns/dark-wood.png');
+        }
+
+        .top-bar {
+            background-color: black;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            letter-spacing: 2px;
+        }
+
+        .title-zone { font-weight: bold; font-size: 1.2rem; white-space: nowrap; }
+        .zone-name { color: var(--text-dim); margin-left: 10px; }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 300px 450px 300px;
+            gap: 30px;
+            padding: 40px;
+            box-sizing: border-box;
+            justify-content: center;
+        }
+
+        .challenges-panel h3 { color: var(--text-dim); font-size: 0.8rem; margin-bottom: 20px; }
+
+        /* Table Styles */
+        .legend-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem; color: var(--text-dim); }
+        .legend-table th { padding: 10px 5px; border-bottom: 1px solid var(--border-color); }
+        .legend-table td { padding: 8px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+        .count-val { color: var(--text-main); font-weight: bold; font-size: 1rem; }
+
+        .board-header { border-bottom: 1px solid var(--text-dim); padding-bottom: 8px; margin-bottom: 25px; width: fit-content; }
+        .board-header h2 { margin: 0; font-size: 2.2rem; letter-spacing: 4px; }
+
+        .board-image-container img {
+            width: 100%;
+            max-width: 400px; 
+            border: 1px solid #444;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .details-panel { padding-left: 20px; border-left: 1px solid rgba(255,255,255,0.1); }
+        .reward-section { margin-top: 35px; border-top: 1px solid #333; padding-top: 15px; }
+
+        .reward-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .reward-icon-img {
+            width: 40px;
+            height: auto;
+            filter: brightness(0.9); /* Matches the slightly dimmed look */
+        }
+
+        .reward-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .reward-amt {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--text-main);
+            line-height: 1;
+        }
+
+        .reward-type {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+            text-transform: capitalize; /* "Metal Shards" */
+        }
+
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark); display: flex; justify-content: center;
+            align-items: center; z-index: 100; transition: opacity 0.5s;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">LOADING DATA...</div>
+
+    <div class="top-bar">
+        <div class="title-zone">
+            MACHINE STRIKE | 
+            <select id="zone-dropdown" style="background: black; color: var(--text-dim); border: 1px solid #444; padding: 5px; text-transform: uppercase; font-family: inherit; cursor: pointer;">
+                <option>LOADING ZONES...</option>
+            </select>
+        </div>
+        <button id="editor-toggle" style="background: var(--accent-gold); color: black; border: none; padding: 8px 15px; cursor: pointer; font-weight: bold; text-transform: uppercase;">Editor</button>
+    </div>
+
+    <div class="main-container">
+        <div class="challenges-panel">
+            <!-- SECTION: Legend of board pieces -->
+            <h2>LEGEND</h2>
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem; color: var(--text-dim);">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <th style="padding: 8px 4px; width: 50px">IMAGE</th>
+                        <th style="padding: 8px 4px; width: 100px">NAME</th>
+                        <th>COUNT</th>
+                    </tr>
+                </thead>
+                <tbody id="legend-body">
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 4px 4px;"><img src="images/Chasm.jpg" style="width: 50px; display: block;" alt=""></td>
+                        <td style="padding: 4px 4px;">Chasm</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 4px 4px;"><img src="images/Marsh.jpg" style="width: 50px; display: block;" alt=""></td>
+                        <td style="padding: 4px 4px;">Marsh</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 4px 4px;"><img src="images/Grassland.jpg" style="width: 50px; display: block;" alt=""></td>
+                        <td style="padding: 4px 4px;">Grassland</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 4px 4px;"><img src="images/Forest.jpg" style="width: 50px; display: block;" alt=""></td>
+                        <td style="padding: 4px 4px;">Forest</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 4px 4px;"><img src="images/Hill.jpg" style="width: 50px; display: block;" alt=""></td>
+                        <td style="padding: 4px 4px;">Hill</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 4px 4px;"><img src="images/Mountain.jpg" style="width: 50px; display: block;" alt=""></td>
+                        <td style="padding: 4px 4px;">Mountain</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div id="challenge-list" style="display:none"></div>
+        </div>
+
+        <div class="middle-panel">
+            <div class="board-header">
+                <h2 id="board-title">SELECT A BOARD</h2>
+            </div>
+            <div id="board-viewer" class="board-section">
+                <div class="board-image-container">
+                    <img id="main-board-img" src="" alt="Strike Board" onerror="this.src='https://placehold.co/500?text=Image+Not+Found'">
+                </div>
+            </div>
+
+            <div id="board-editor" class="board-section" style="display: none;">
+                <div id="editor-grid" style="display: grid; grid-template-columns: repeat(8, 50px); grid-template-rows: repeat(8, 50px); background: #333; width: fit-content; margin: 0 auto;">
+            </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="clearEditorGrid()" style="background: #ac1111; color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; text-transform: uppercase;">Clear Grid</button>
+                    <button onclick="exportGridToCSV()" style="background: var(--accent-gold); color: black; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; text-transform: uppercase;">Export CSV</button>
+                    <button onclick="document.getElementById('csv-upload').click()" style="background: #2e5c5c; color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; text-transform: uppercase;">Load CSV</button>
+                    <input type="file" id="csv-upload" accept=".csv" style="display: none;" onchange="importCSVToGrid(this)">
+                </div>
+                
+                <select id="cell-selector-template" style="display: none;">
+                    <option value="#b45f06">Chasm</option>
+                    <option value="#2e5c5c">Marsh</option>
+                    <option value="#5c5c2e">Grassland</option>
+                    <option value="#2e5c2e">Forest</option>
+                    <option value="#333333">Hill</option>
+                    <option value="#777777">Mountain</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="details-panel">
+            <div id="difficulty-container">
+                <p>DIFFICULTY: <span id="difficulty-val">---</span></p>
+            </div>
+            
+            <div class="reward-section" id="shards-container">
+                <h3>REWARDS</h3>
+                <div id="reward-list"></div>
+            </div>
+            
+            <div class="reward-section" id="special-container">
+                <h3>SPECIAL REWARDS</h3>
+                <div id="special-reward"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SHEET_ID = '1irt1S9vkX8YqwX_dI3CscKbwjsYgmWKppVOEmI-NAo0';
+        const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+
+        const editorColors = {
+                "Chasm": "#ac1111",    // Reddish
+                "Marsh": "#11cccc",    // Teal
+                "Grassland": "#cccc11",// Yellowish
+                "Forest": "#1e5c1e",   // Green
+                "Hill": "#382e1c",     // Dark Greyish Brown
+                "Mountain": "#aaaaaa"  // Light Grey
+            };
+
+        let allDataByZone = {}; 
+        let currentZone = "";
+
+        // Terrain mapping order: H-M
+        const terrainNames = ["Chasm", "Marsh", "Grassland", "Forest", "Hill", "Mountain"];
+
+        async function init() {
+            // Failsafe: Remove loader if it takes too long
+            const loaderTimeout = setTimeout(() => {
+                const loader = document.getElementById('loader');
+                if (loader) loader.innerText = "TIMEOUT: CHECK PERMISSIONS";
+            }, 5000);
+
+            try {
+                //console.log("Fetching data from:", CSV_URL);
+                const response = await fetch(CSV_URL);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const csvText = await response.text();
+                //console.log("CSV Data Received. Parsing...");
+
+                // Robust CSV Row Splitter
+                const rows = csvText.split(/\r?\n/).filter(row => row.trim() !== "");
+                const dataRows = rows.slice(1); // Skip header
+
+                allDataByZone = {};
+
+                dataRows.forEach((row, index) => {
+                    // Updated Regex to better handle quotes and commas
+                    const cols = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
+                    const clean = cols.map(c => c.replace(/^"|"$/g, '').trim());
+
+                    if (clean.length < 2) return; // Skip empty/broken rows
+
+                    const zoneName = clean[0] || "UNKNOWN";
+                    const boardData = {
+                        name: clean[1] || `Board ${index}`,
+                        difficulty: clean[2] || "---",
+                        shards: clean[5] ? clean[5].toString().trim() : "",
+                        special: clean[6] || "None",
+                        // Dynamic Counts from H-M (Indices 7-12)
+                        counts: [clean[7]||"0", clean[8]||"0", clean[9]||"0", clean[10]||"0", clean[11]||"0", clean[12]||"0"]
+                    };
+
+                    if (!allDataByZone[zoneName]) {
+                        allDataByZone[zoneName] = [];
+                    }
+                    allDataByZone[zoneName].push(boardData);
+                });
+
+                clearTimeout(loaderTimeout);
+                populateZoneDropdown();
+
+                // FORCE INITIAL LOAD: Trigger the first board of the first zone
+                const zones = Object.keys(allDataByZone);
+                if (zones.length > 0) {
+                    currentZone = zones[0];
+                    updateDetails(0); 
+                }
+                
+                // Hide loader
+                const loader = document.getElementById('loader');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 500);
+                }
+
+            } catch (err) {
+                console.error("Initialization Error: ", err);
+                document.getElementById('loader').innerText = "FATAL ERROR: " + err.message;
+            }
+        }
+
+        function populateZoneDropdown() {
+            const dropdown = document.getElementById('zone-dropdown');
+            const zones = Object.keys(allDataByZone);
+            
+            if (zones.length === 0) {
+                dropdown.innerHTML = "<option>NO ZONES FOUND</option>";
+                return;
+            }
+
+            dropdown.innerHTML = zones.map(z => `<option value="${z}">${z}</option>`).join('');
+            
+            dropdown.onchange = (e) => {
+                currentZone = e.target.value;
+
+                // --- AUTO-SWITCH TO VIEWER MODE ---
+                isEditorMode = false;
+                const viewer = document.getElementById('board-viewer');
+                const editor = document.getElementById('board-editor');
+                const title = document.getElementById('board-title');
+                const toggleBtn = document.getElementById('editor-toggle');
+
+                if (viewer && editor) {
+                    viewer.style.display = "block";
+                    editor.style.display = "none";
+                    title.innerText = currentZone;
+                    toggleBtn.innerText = "EDITOR";
+                }
+
+                // Re-instate the details sections in case they were hidden by editor mode
+                document.getElementById('difficulty-container').style.display = "block";
+                document.getElementById('shards-container').style.display = "block";
+                document.getElementById('special-container').style.display = "block";
+
+                updateDetails(0); // For now, defaults to first board in zone
+            };
+
+            currentZone = zones[0];
+        }
+
+        function updateDetails(index) {
+            const zoneData = allDataByZone[currentZone];
+            if (!zoneData || !zoneData[index]) return;
+
+            const d = zoneData[index];
+            const boardPath = `images/${currentZone}.png`;
+            const shardIconUrl = "https://drive.google.com/thumbnail?id=1L4K5iX122VUIYRI4zc55LxrJr3jbUbi3&sz=w1000";
+
+            document.getElementById('board-title').innerText = currentZone;
+            document.getElementById('difficulty-val').innerText = d.difficulty;
+            document.getElementById('main-board-img').src = boardPath;
+
+            // Update LEGEND Table Body
+            let legendHtml = "";
+            terrainNames.forEach((name, i) => {
+                legendHtml += `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td><img src="images/${name}.jpg" style="width: 50px; display: block;" alt=""></td>
+                        <td>${name}</td>
+                        <td class="count-val">${d.counts[i]}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('legend-body').innerHTML = legendHtml;
+
+            // Rewards logic with special case for Skill Points
+            let rewardHtml = "";
+
+            const shardValue = (d.shards || "").toLowerCase();
+
+            if (shardValue.includes("skill point")) {
+                // Special case layout: only display text
+                rewardHtml = `
+                    <div class="reward-item">
+                        <div class="reward-text-container">
+                            <span class="reward-type">${d.shards}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Standard Shard layout: Icon + Amount + "Metal Shards"
+                rewardHtml = `
+                    <div class="reward-item">
+                        <img src="${shardIconUrl}" class="reward-icon-img" alt="Shard Icon">
+                        <div class="reward-text-container">
+                            <span class="reward-amt">${d.shards}</span>
+                            <span class="reward-type">Metal Shards</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('reward-list').innerHTML = rewardHtml;
+            
+            // Special Reward Section Update
+            // Loads image from images/pieces/{SPECIAL REWARD}.png
+            const specialRewardName = (d.special || "").trim();
+            const specialIconPath = `images/pieces/${specialRewardName}.jpg`;
+
+            document.getElementById('special-reward').innerHTML = `
+                <div class="reward-item">
+                    <img src="${specialIconPath}" 
+                        style="width: 64px; height: 64px; object-fit: contain;" 
+                        alt="${specialRewardName}"
+                        onerror="this.style.display='none'">
+                    <div class="reward-text-container">
+                        <span class="reward-type">${specialRewardName}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        let isEditorMode = false;
+
+        // Initialize the Editor Button
+        document.getElementById('editor-toggle').onclick = function() {
+            isEditorMode = !isEditorMode;
+            const viewer = document.getElementById('board-viewer');
+            const editor = document.getElementById('board-editor');
+            const title = document.getElementById('board-title');
+
+            // Target the detail containers
+            const diffDiff = document.getElementById('difficulty-container');
+            const shardSection = document.getElementById('shards-container');
+            const specialSection = document.getElementById('special-container');
+
+            if (isEditorMode) {
+                viewer.style.display = "none";
+                editor.style.display = "block";
+
+                // Hide details
+                diffDiff.style.display = "none";
+                shardSection.style.display = "none";
+                specialSection.style.display = "none";
+
+                title.innerText = "EDITOR";
+                this.innerText = "VIEWER";
+
+                // Create grid and count what's set in the editor so far
+                generateEditorGrid();
+                updateEditorLegendCounts();
+            } else {
+                viewer.style.display = "block";
+                editor.style.display = "none";
+
+                // Show details
+                diffDiff.style.display = "block";
+                shardSection.style.display = "block";
+                specialSection.style.display = "block";
+
+                title.innerText = currentZone;
+                this.innerText = "EDITOR";
+
+                // Restore spreadsheet data
+                updateDetails(0);
+            }
+        };
+
+        // Generate the 8x8 Grid
+        function generateEditorGrid() {
+            const grid = document.getElementById('editor-grid');
+            if (grid.children.length > 0) return; // Don't regenerate if already exists
+
+            for (let i = 0; i < 64; i++) {
+                const cell = document.createElement('div');
+                cell.style.width = "45px";
+                cell.style.height = "45px";
+                cell.style.background = "white";
+                cell.style.cursor = "pointer";
+                cell.style.border = "2px solid rgba(0,0,0,0.1)";
+                cell.style.position = "relative";
+
+                cell.onclick = function(e) {
+                    // Stop propagation so clicking the select doesn't re-trigger cell.onclick
+                    if (e.target !== cell) return;
+
+                    if (!cell.querySelector('select')) {
+                        const selector = document.createElement('select');
+                        //selector.style.width = "100%";
+
+                        // FORCE EXPAND: Setting size makes it look like an open menu
+                        selector.size = 7;
+
+                        // Styling to make it overlay the grid properly
+                        selector.style.position = "absolute";
+                        selector.style.top = "0";
+                        selector.style.left = "0";
+                        selector.style.zIndex = "10";
+                        selector.style.width = "100px";
+                        
+                        const def = document.createElement('option');
+                        def.innerText = "Select...";
+                        def.disabled = true;
+                        def.selected = true;
+                        selector.appendChild(def);
+
+                        Object.keys(editorColors).forEach(name => {
+                            const opt = document.createElement('option');
+                            opt.value = editorColors[name];
+                            opt.innerText = name;
+                            selector.appendChild(opt);
+                        });
+
+                        selector.onchange = function() {
+                            if (this.value) cell.style.background = this.value;
+
+                            // Trigger the legend update
+                            updateEditorLegendCounts(); 
+
+                            selector.remove();
+                        };
+
+                        // Remove if user clicks away without selecting
+                        selector.onblur = function() {
+                            selector.remove();
+                        };
+                        
+                        cell.appendChild(selector);
+                        selector.focus();
+                    }
+                };
+                grid.appendChild(cell);
+            }
+        }
+
+        function updateEditorLegendCounts() {
+            const grid = document.getElementById('editor-grid');
+            const cells = grid.querySelectorAll('div');
+            const counts = [0, 0, 0, 0, 0, 0];
+
+            // Create a reverse lookup: hex -> index (0-5)
+            const hexToIdx = {};
+            terrainNames.forEach((name, idx) => {
+                hexToIdx[editorColors[name]] = idx;
+            });
+
+            cells.forEach(cell => {
+                const hex = rgbToHex(cell.style.backgroundColor);
+                if (hexToIdx[hex] !== undefined) {
+                    counts[hexToIdx[hex]]++;
+                }
+            });
+
+            const countCells = document.querySelectorAll('.count-val');
+            countCells.forEach((cell, i) => {
+                cell.innerText = counts[i];
+            });
+        }
+
+        // Helper to handle browser RGB strings
+        function rgbToHex(rgb) {
+            if (!rgb || rgb === "white" || rgb === "rgba(0, 0, 0, 0)") return "";
+            const vals = rgb.match(/\d+/g);
+            if (!vals) return "";
+            return "#" + vals.slice(0, 3).map(x => {
+                const hex = parseInt(x).toString(16);
+                return hex.length === 1 ? "0" + hex : hex;
+            }).join('');
+        }
+
+        function clearEditorGrid() {
+            // Confirmation Popup
+            const confirmClear = confirm("Are you sure you want to clear the entire grid? This cannot be undone.");
+            
+            if (confirmClear) {
+                const grid = document.getElementById('editor-grid');
+                const cells = grid.querySelectorAll('div');
+                
+                // Reset every cell to white
+                cells.forEach(cell => {
+                    cell.style.background = "white";
+                });
+                
+                // Update the Legend to reflect 0 for all types
+                updateEditorLegendCounts();
+            }
+        }
+
+        function exportGridToCSV() {
+            const grid = document.getElementById('editor-grid');
+            const cells = Array.from(grid.querySelectorAll('div'));
+            
+            // Check if the board is empty
+            const isEmpty = cells.every(cell => {
+                const bg = cell.style.backgroundColor;
+                const hex = rgbToHex(bg);
+                return !hex || hex === "" || hex === "white";
+            });
+            if (isEmpty) {
+                alert("The board is empty. Place at least one terrain before exporting.");
+                return;
+            }
+
+            // Create mapping of hex colors to 3-letter codes
+            const colorToCode = {};
+            Object.keys(editorColors).forEach(name => {
+                colorToCode[editorColors[name]] = name.substring(0, 3).toUpperCase();
+            });
+
+            let csvContent = "";
+            
+            for (let i = 0; i < 8; i++) {
+                let row = [];
+                for (let j = 0; j < 8; j++) {
+                    const cellIndex = (i * 8) + j;
+                    const bg = cells[cellIndex].style.backgroundColor;
+                    const hex = rgbToHex(bg);
+                    
+                    // Default to "NUL" (Null/Empty) if no terrain is set or cell is white
+                    const code = (hex && colorToCode[hex]) ? colorToCode[hex] : "NUL";
+                    row.push(code);
+                }
+                csvContent += row.join(",") + "\n";
+            }
+
+            // Trigger Download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `strike_board_editor.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function importCSVToGrid(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                // Split by newlines and commas, then flatten into a single array of codes
+                const rows = text.split(/\r?\n/).filter(row => row.trim() !== "");
+                const allCodes = [];
+                rows.forEach(row => {
+                    const cols = row.split(',').map(c => c.trim().toUpperCase());
+                    allCodes.push(...cols);
+                });
+
+                const grid = document.getElementById('editor-grid');
+                const cells = grid.querySelectorAll('div');
+
+                // Create a lookup for Code -> Hex
+                const codeToHex = { "EMP": "white" };
+                Object.keys(editorColors).forEach(name => {
+                    codeToHex[name.substring(0, 3).toUpperCase()] = editorColors[name];
+                });
+
+                // Apply to cells
+                cells.forEach((cell, i) => {
+                    if (allCodes[i]) {
+                        const hex = codeToHex[allCodes[i]] || "white";
+                        cell.style.background = hex;
+                    }
+                });
+
+                // Sync the Legend table
+                updateEditorLegendCounts();
+                
+                // Reset the input so the same file can be uploaded again if needed
+                input.value = "";
+            };
+
+            reader.readAsText(file);
+        }
+
+        init();
+    </script>
+</body>
+</html>
